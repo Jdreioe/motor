@@ -9,7 +9,7 @@ typedef enum {
 // Initialiser Timer5 (1 kHz interrupt)
 void motorTimer5Init(void);
 
-// Sæt mål: retning + PWM (0–255)
+// Sæt mål: retning + PWM (0–1023)
 void motorSetTarget(MotorRetning retning, int targetPWM);
 
 // Hent nuværende PWM-værdi

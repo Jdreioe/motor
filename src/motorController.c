@@ -25,11 +25,11 @@ void motorTimer5Init(void) {
     OCR5A = 249;                                // 16MHz / (64 * 1000) - 1 = 1 kHz
     TIMSK5 |= (1 << OCIE5A);                    // Enable interrupt
 }
-// SSet target: direction + PWM (0–255)
+// Set target: direction + PWM (0–1023)
 void motorSetTarget(MotorRetning retning, int targetPWM) {
     g_motor_retning = retning;
     if (targetPWM < 0) targetPWM = 0;
-    if (targetPWM > 255) targetPWM = 255;
+    if (targetPWM > 1023) targetPWM = 1023;
     g_target_pwm = targetPWM;
 }
 // get current PWM value
@@ -37,23 +37,18 @@ int motorGetCurrentPWM(void) {
     return g_current_pwm;
 }
 
-// initialize Timer1 (8-bit Fast PWM, 31.25 kHz) to control motor
+// initialize Timer1 (10-bit Fast PWM, ~1.95 kHz) to control motor
 static void timer1_pwm_init(void) {
     DDRB |= (1 << PWM_PIN) | (1 << DIR_PIN);
-    TCCR1A = (1 << WGM10);                      // 8-bit Fast PWM
-    TCCR1B = (1 << WGM12) | (1 << CS11);        // Prescaler 8 → ~31.25 kHz
+    // Set Timer1 for 10-bit Fast PWM, prescaler 8
+    TCCR1A = 0b00000011; // WGM11 | WGM10
+    TCCR1B = 0b00001010; // WGM12 | CS11
     OCR1A = 0;
 }
 // SET PWM + direction
 void motor_apply_output(MotorRetning retning, int pwm) {
     // If pwm is 0, disable PWM output
-    if (pwm == 0) {
-        TCCR1A &= ~(1 << COM1A1);  // Disconnect OC1A
-        PORTB &= ~(1 << PWM_PIN);
-        PORTB &= ~(1 << DIR_PIN);
-        OCR1A = 0;
-        return;
-    }
+    
 
     // Ensure Timer1 is initialized
     if (!(TCCR1B & (1 << CS11))) {
@@ -63,8 +58,13 @@ void motor_apply_output(MotorRetning retning, int pwm) {
     if (!(TCCR1A & (1 << COM1A1))) {
         TCCR1A |= (1 << COM1A1);   // Connect OC1A
     }
-    // Set PWM value on OCR1A
-    OCR1A = (uint8_t)pwm;
+    // Clamp and set PWM value on OCR1A (10-bit)
+    if (pwm < 0) {
+        pwm = 0;
+    } else if (pwm > 1023) {
+        pwm = 1023;
+    }
+    OCR1A = (uint16_t)pwm;
     // Set direction pin
     if (retning == MOTOR_RETNING_FREM) {
         PORTB &= ~(1 << DIR_PIN);

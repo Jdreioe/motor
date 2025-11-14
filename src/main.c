@@ -6,34 +6,28 @@
 #include "led.h"
 
 #define TEST_SWITCH 0  // SW0
+#define PWM_PERCENT(pct) ((uint16_t)((pct) * 1023UL / 100UL))
 // Struct for each test step
 typedef struct {
     MotorRetning direction;
-    int target_pwm;
+    uint16_t target_pwm;
     uint16_t duration_ms;
 } MotorTestStep;
 // Testsequence
 static const MotorTestStep kTestSteps[] = {
-    { MOTOR_RETNING_FREM,  26, 3000 },
-    { MOTOR_RETNING_FREM,   0, 3000 },
-    { MOTOR_RETNING_BAK,   26, 3000 },
-    { MOTOR_RETNING_FREM,  51, 3000 },
-    { MOTOR_RETNING_BAK,   51, 3000 },
-    { MOTOR_RETNING_FREM,  77, 3000 },
-    { MOTOR_RETNING_BAK,   77, 3000 },
-    { MOTOR_RETNING_FREM, 102, 3000 },
-    { MOTOR_RETNING_BAK,  102, 3000 },
-    { MOTOR_RETNING_FREM, 128, 3000 },
-    { MOTOR_RETNING_BAK,  128, 3000 },
-    { MOTOR_RETNING_FREM, 153, 3000 },
-    { MOTOR_RETNING_BAK,  153, 3000 },
-    { MOTOR_RETNING_FREM, 179, 3000 },
-    { MOTOR_RETNING_BAK,  179, 3000 },
-    { MOTOR_RETNING_FREM, 204, 3000 },
-    { MOTOR_RETNING_BAK,  204, 3000 },
-    { MOTOR_RETNING_FREM, 230, 3000 },
-    { MOTOR_RETNING_BAK,  230, 3000 },
-    { MOTOR_RETNING_FREM, 255, 3000 }
+    { MOTOR_RETNING_FREM, PWM_PERCENT(10), 3000 },
+    { MOTOR_RETNING_BAK,  PWM_PERCENT(10), 3000 },
+    { MOTOR_RETNING_FREM, PWM_PERCENT(25), 3000 },
+    { MOTOR_RETNING_BAK,  PWM_PERCENT(25), 3000 },
+    { MOTOR_RETNING_FREM, PWM_PERCENT(40), 3000 },
+    { MOTOR_RETNING_BAK,  PWM_PERCENT(40), 3000 },
+    { MOTOR_RETNING_FREM, PWM_PERCENT(55), 3000 },
+    { MOTOR_RETNING_BAK,  PWM_PERCENT(55), 3000 },
+    { MOTOR_RETNING_FREM, PWM_PERCENT(70), 3000 },
+    { MOTOR_RETNING_BAK,  PWM_PERCENT(70), 3000 },
+    { MOTOR_RETNING_FREM, PWM_PERCENT(85), 3000 },
+    { MOTOR_RETNING_BAK,  PWM_PERCENT(85), 3000 },
+    { MOTOR_RETNING_FREM, PWM_PERCENT(100), 3000 }
 };
 // Simple delay function
 static void delay_ms(uint16_t ms) {
@@ -75,20 +69,24 @@ static void run_step(const MotorTestStep *step, unsigned char step_index) {
 
 int main(void) {
     initSwitchPort();
-    initLEDport();
+    //initLEDport();
     motorTimer5Init();
     // Ensure motor is stopped at start
     motorSetTarget(MOTOR_RETNING_FREM, 0);
 
     writeAllLEDs(0x01); _delay_ms(300);
     writeAllLEDs(0x00); _delay_ms(300);
-    // Main test loop
+
+    // When SW1 is pressed, set PWM to 50% constantly
     while (1) {
-        for (unsigned char i = 0; i < sizeof(kTestSteps)/sizeof(kTestSteps[0]); i++) {
-            run_step(&kTestSteps[i], i);
+        if (switchOn(1)) {
+            motorSetTarget(MOTOR_RETNING_FREM, PWM_PERCENT(50));
+            motor_apply_output(MOTOR_RETNING_FREM, motorGetCurrentPWM());
+        } else {
+            motorSetTarget(MOTOR_RETNING_FREM, 0);
+            motor_apply_output(MOTOR_RETNING_FREM, 0);
         }
-        writeAllLEDs(0x0F); _delay_ms(400);
-        writeAllLEDs(0x00); _delay_ms(400);
+        _delay_ms(10);
     }
     return 0;
 }
