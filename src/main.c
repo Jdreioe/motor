@@ -12,25 +12,25 @@
 #define PWM_PERCENT(pct) ((uint16_t)((pct) * 1023UL / 100UL))
 // Struct for each test step
 typedef struct {
-    MotorRetning direction;
+    MotorDirection direction;
     uint16_t target_pwm;
     uint16_t duration_ms;
 } MotorTestStep;
 // Testsequence
 static const MotorTestStep kTestSteps[] = {
-    { MOTOR_RETNING_FREM, PWM_PERCENT(10), 5000 },
-    { MOTOR_RETNING_BAK,  PWM_PERCENT(10), 5000 },
-    { MOTOR_RETNING_FREM, PWM_PERCENT(25), 5000 },
-    { MOTOR_RETNING_BAK,  PWM_PERCENT(25), 5000 },
-    { MOTOR_RETNING_FREM, PWM_PERCENT(40), 5000 },
-    { MOTOR_RETNING_BAK,  PWM_PERCENT(40), 5000 },
-    { MOTOR_RETNING_FREM, PWM_PERCENT(55), 5000 },
-    { MOTOR_RETNING_BAK,  PWM_PERCENT(55), 5000 },
-    { MOTOR_RETNING_FREM, PWM_PERCENT(70), 5000 },
-    { MOTOR_RETNING_BAK,  PWM_PERCENT(70), 5000 },
-    { MOTOR_RETNING_FREM, PWM_PERCENT(85), 5000 },
-    { MOTOR_RETNING_BAK,  PWM_PERCENT(85), 5000 },
-    { MOTOR_RETNING_FREM, PWM_PERCENT(100), 5000 }
+    { MOTOR_DIRECTION_DRIVE, PWM_PERCENT(10), 5000 },
+    { MOTOR_DIRECTION_REVERSE,  PWM_PERCENT(10), 5000 },
+    { MOTOR_DIRECTION_DRIVE, PWM_PERCENT(25), 5000 },
+    { MOTOR_DIRECTION_REVERSE,  PWM_PERCENT(25), 5000 },
+    { MOTOR_DIRECTION_DRIVE, PWM_PERCENT(40), 5000 },
+    { MOTOR_DIRECTION_REVERSE,  PWM_PERCENT(40), 5000 },
+    { MOTOR_DIRECTION_DRIVE, PWM_PERCENT(55), 5000 },
+    { MOTOR_DIRECTION_REVERSE,  PWM_PERCENT(55), 5000 },
+    { MOTOR_DIRECTION_DRIVE, PWM_PERCENT(70), 5000 },
+    { MOTOR_DIRECTION_REVERSE,  PWM_PERCENT(70), 5000 },
+    { MOTOR_DIRECTION_DRIVE, PWM_PERCENT(85), 5000 },
+    { MOTOR_DIRECTION_REVERSE,  PWM_PERCENT(85), 5000 },
+    { MOTOR_DIRECTION_DRIVE, PWM_PERCENT(100), 5000 }
 };
 // Simple delay function
 static void delay_ms(uint16_t ms) {
@@ -83,9 +83,9 @@ static bool run_step(const MotorTestStep *step, unsigned char step_index) {
 int main(void) {
     initSwitchPort();
     initLEDport();
-    motorTimer5Init();
+    motorInit();
     // Ensure motor is stopped at start
-    motorSetTarget(MOTOR_RETNING_FREM, 0);
+    motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
 
     writeAllLEDs(0x01); _delay_ms(300);
     writeAllLEDs(0x00); _delay_ms(300);
@@ -101,8 +101,8 @@ int main(void) {
                     break;
                 }
             }
-            motorSetTarget(MOTOR_RETNING_FREM, 0);
-            motor_apply_output(MOTOR_RETNING_FREM, 0);
+            motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
+            motor_apply_output(MOTOR_DIRECTION_DRIVE, 0);
             if (!completed) {
                 while (switchOn(STOP_SWITCH)) {
                     _delay_ms(10);
@@ -111,13 +111,17 @@ int main(void) {
         }
 
         if (switchOn(1)) {
-            motorSetTarget(MOTOR_RETNING_FREM, PWM_PERCENT(50));
-            motor_apply_output(MOTOR_RETNING_FREM, motorGetCurrentPWM());
+            motorSetTarget(MOTOR_DIRECTION_DRIVE, PWM_PERCENT(50));
+            motor_apply_output(MOTOR_DIRECTION_DRIVE, motorGetCurrentPWM());
         } else {
-            motorSetTarget(MOTOR_RETNING_FREM, 0);
-            motor_apply_output(MOTOR_RETNING_FREM, 0);
+            motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
+            motor_apply_output(MOTOR_DIRECTION_DRIVE, 0);
         }
         _delay_ms(10);
     }
     return 0;
+}
+
+int GetCurrentTemp(void) {
+
 }

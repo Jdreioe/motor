@@ -2,23 +2,30 @@
 #define MOTORCONTROLLER_H
 
 typedef enum {
-    MOTOR_RETNING_FREM,
-    MOTOR_RETNING_BAK
-} MotorRetning;
+    MOTOR_DIRECTION_DRIVE,
+    MOTOR_DIRECTION_REVERSE
+} MotorDirection;
 
-// Initialiser Timer5 (1 kHz interrupt)
-void motorTimer5Init(void);
+// Initialiser Motor (Timer1 PWM + Control Loop)
+void motorInit(void);
 
 // Sæt mål: retning + PWM (0–1023)
-void motorSetTarget(MotorRetning retning, int targetPWM);
+void motorSetTarget(MotorDirection retning, int targetPWM);
 
 // Hent nuværende PWM-værdi
 int motorGetCurrentPWM(void);
 
-// UDFØR: Sæt PWM + retning på hardware (sikker!)
-void motor_apply_output(MotorRetning retning, int pwm);
+void motor_apply_output(MotorDirection retning, int pwm);
 
-// Til test: Simuler én ISR-iteration
-void motorSimulateISR(void);
+static void timer1WritePwm(uint16_t pwm, MotorDirection retning);
+
+static inline void motorServiceTick(void);
+
+static uint16_t limit_pwm(int pwm);
+
+int GetCurrentTemp(void);
+
+void motorPause(void);
+
 
 #endif
