@@ -25,7 +25,7 @@ unsigned char switchOn(unsigned char switch_nr)
 {
   if (switch_nr < 8) 
   {
-    return (PINA & (1 << switch_nr)); // Returner TRUE (1) hvis bit er 1 (switch er trykket)
+    return ((~PINA) & (1 << switch_nr)) ? 1 : 0; // Aktive lave: TRUE når kontakt er trykket
   }
   return 0; // Returner FALSE (0) hvis switch_nr er ugyldig
 }
