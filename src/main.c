@@ -86,3 +86,7 @@ int main(void) {
     }
     return 0;
 }
+
+int GetCurrentTemp(void) {
+
+}
