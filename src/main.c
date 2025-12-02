@@ -39,13 +39,15 @@ int main(void) {
     motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
 
     uint16_t last_count = 0xFFFF;
+    uint32_t loop_counter = 0;
 
     while (1) {
+
         sensorUpdate();
         uint16_t count = getReflexCount();
 
         if (count != last_count) {
-            printf("Reflex Count: %u\n", count);
+
             last_count = count;
         }
 
@@ -84,6 +86,7 @@ int main(void) {
         
         _delay_ms(10);
     }
+    
     return 0;
 }
 

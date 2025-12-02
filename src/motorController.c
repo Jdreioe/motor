@@ -51,13 +51,13 @@ void motorInit(void) {
     // Save COM1A bits so we can disconnect/reconnect OC1A later
     g_saved_com1a_bits = TCCR1A & 0xC0; // COM1A1:0 are bits 7..6
 
-    // Initialize Timer5 (100 Hz interrupt) to adjust PWM smoothly
+    // Initialize Timer5 (200 Hz interrupt) to adjust PWM smoothly
     TCCR5A = 0;
     TCCR5B = 0;
     TCNT5 = 0;
     TIMSK5 = 0;
 
-    OCR5A = 1249;                               // 16MHz / (64 * 100) - 1 = 100 Hz
+    OCR5A = 1249;                               // 16MHz / (64 * 100) - 1 = 200 Hz
     TCCR5B = 0b00001011;                        // CTC mode, prescaler 64
     TIMSK5 = 0b00000010;                        // Enable interrupt
 
@@ -113,6 +113,14 @@ static inline void motorServiceTick(void) {
 
     // Increment service tick counter (100 Hz -> 10 ms per tick)
     g_service_ticks++;
+
+    // 1-minute timeout check (12000 ticks at 200 Hz= 60s)
+    if (g_service_ticks >= 12000) {
+        g_target_pwm = 0;
+        g_current_pwm = 0;
+        writePwm(0, g_motor_retning);
+        
+    }
 }
 // Called from main to timeout the motor if needed
 static void motorBreak(void) {
