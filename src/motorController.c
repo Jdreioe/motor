@@ -5,7 +5,7 @@
 #include "motorController.h"
 #define PWM_PIN PB5  // Pin 11 → OCR1A
 #define DIR_PIN PB6  // Pin 12 → Direction
-#define PWM_RAMP_STEP 30  // PWM change step per tick
+#define PWM_RAMP_STEP 20  // PWM change step per tick
 
 
 static volatile int g_current_pwm = 0;
@@ -29,9 +29,10 @@ static inline uint16_t limitPWM(int pwm) {
 }
 
 
-// Timer5: 100 Hz → soft PWM-change
+// Timer5: 200 Hz → soft PWM-change
 ISR(TIMER5_COMPA_vect) {
     motorServiceTick();
+
 }
 
 // Initializes Motor Controller (Timer1 for PWM + Timer5 for Control Loop)
@@ -184,4 +185,14 @@ void motorDisableOutput(void) {
     DDRB |= (1 << DIR_PIN);
     g_pwm_output_enabled = false;
     SREG = sreg;
+}
+
+// Get current service ticks (200Hz counter)
+uint16_t motorGetTicks(void) {
+    uint16_t ticks;
+    uint8_t sreg = SREG;
+    cli();
+    ticks = g_service_ticks;
+    SREG = sreg;
+    return ticks;
 }

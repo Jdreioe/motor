@@ -31,15 +31,7 @@ void motorChangeDirection(MotorDirection new_dir, int targetPWM);
 void motorEnableOutput(void);
 void motorDisableOutput(void);
 
-static void WritePwm(uint16_t pwm, MotorDirection retning);
-
-static inline void motorServiceTick(void);
-
-static uint16_t limit_pwm(int pwm);
-
-static int GetCurrentTemp(void);
-
-void motorPause(void);
-
+// Get current service ticks (200Hz counter)
+uint16_t motorGetTicks(void);
 
 #endif

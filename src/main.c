@@ -10,7 +10,7 @@
 #include "uart.h"
 
 #define PWM_PERCENT(pct) ((uint16_t)((pct) * 1023UL / 100UL))
-#define NORM_SPEED PWM_PERCENT(60)
+#define NORM_SPEED PWM_PERCENT(70)
 #define UP_SPEED PWM_PERCENT(100)
 #define DOWN_SPEED PWM_PERCENT(40)
 #define STOP 0
@@ -20,21 +20,23 @@ int main(void) {
     initSwitchPort();
     initLEDport();
     uartInit();
-    motorInit();
+    
     sensorInit();
     
     printf("System Initialized\n");
 
     // Ensure motor is stopped at start
-    motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
+
 
     // Wait for start signal (e.g., SW0)
     while (!switchOn(0)) {
         _delay_ms(10);
     }
     printf("Starting...\n");
+    motorInit();
     _delay_ms(500); // Debounce/wait
 
+    motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
     // Start driving forward
     motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
 
@@ -67,7 +69,8 @@ int main(void) {
         }
         
         else if (count == 6) {
-            motorSetTarget(MOTOR_DIRECTION_REVERSE, NORM_SPEED);
+            motorChangeDirection(MOTOR_DIRECTION_REVERSE, NORM_SPEED);
+
         }
         else if (count == 7) {
 
