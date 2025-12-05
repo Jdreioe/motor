@@ -7,6 +7,9 @@
 #define DIR_PIN PB6  // Pin 12 → Direction
 #define PWM_RAMP_STEP 20  // PWM change step per tick
 
+// Forward declarations
+static void writePwm(uint16_t pwm, MotorDirection retning);
+static inline void motorServiceTick(void);
 
 static volatile int g_current_pwm = 0;
 static volatile int g_target_pwm = 0;
