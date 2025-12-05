@@ -3,9 +3,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "motorController.h"
+#include <util/delay.h>
 #define PWM_PIN PB5  // Pin 11 → OCR1A
 #define DIR_PIN PB6  // Pin 12 → Direction
-#define PWM_RAMP_STEP 20  // PWM change step per tick
+#define PWM_RAMP_STEP_DEFAULT 20 // Default PWM change step per tick
 
 // Forward declarations
 static void writePwm(uint16_t pwm, MotorDirection retning);
@@ -13,6 +14,7 @@ static inline void motorServiceTick(void);
 
 static volatile int g_current_pwm = 0;
 static volatile int g_target_pwm = 0;
+static volatile uint16_t g_ramp_step = PWM_RAMP_STEP_DEFAULT;
 static volatile MotorDirection g_motor_retning = MOTOR_DIRECTION_DRIVE;
 // Counts service ticks (incremented in motorServiceTick). Each tick = 10 ms
 static volatile uint16_t g_service_ticks = 0;
@@ -73,6 +75,12 @@ void motorSetTarget(MotorDirection retning, int targetPWM) {
     g_motor_retning = retning;
     g_target_pwm = limitedPwm;
 }
+
+// Set ramp speed (step size per tick).
+void motorSetRampSpeed(uint16_t step) {
+    g_ramp_step = step;
+}
+
 // get current PWM value
 int motorGetCurrentPWM(void) {
     return g_current_pwm;
@@ -94,16 +102,16 @@ static void writePwm(uint16_t pwm, MotorDirection retning) {
 static inline void motorServiceTick(void) {
     int current = g_current_pwm;
     int target = g_target_pwm;
-    // If current PWM is less than target, increase it by PWM_RAMP_STEP
+    // If current PWM is less than target, increase it by g_ramp_step
     if (current < target) {
-        int ramp_calc = current * 2 + PWM_RAMP_STEP;
+        int ramp_calc = current * 2 + g_ramp_step;
         current += ramp_calc;
         if (current > target) {
             current = target;
         }
-        // If current PWM is greater than target, decrease it by PWM_RAMP_STEP
+        // If current PWM is greater than target, decrease it by g_ramp_step
     } else if (current > target) {
-        current -= PWM_RAMP_STEP;
+        current -= g_ramp_step;
         if (current < target) {
             current = target;
         }
@@ -115,7 +123,7 @@ static inline void motorServiceTick(void) {
     // Write to hardware
     writePwm(pwm, g_motor_retning);
 
-    // Increment service tick counter (100 Hz -> 10 ms per tick)
+    // Increment service tick counter (200 Hz -> 5 ms per tick)
     g_service_ticks++;
 
     // 1-minute timeout check (12000 ticks at 200 Hz= 60s)
@@ -133,11 +141,12 @@ static void motorBreak(void) {
 }
 // Safely change direction: ramp down to 0 (within `ramp_ms`), switch direction, ramp up to `targetPWM`.
 void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms) {
-    // Compute max number of service ticks to wait (each tick = 10 ms)
+    // Compute max number of service ticks to wait (each tick = 5 ms)
     uint16_t start = g_service_ticks;
-    uint16_t max_ticks = (ramp_ms + 9) / 10; // ceil(ramp_ms/10)
+    uint16_t max_ticks = (ramp_ms + 4) / 5; // ceil(ramp_ms/5)
 
     // Request ramp down to 0 while keeping current direction
+    motorSetRampSpeed(15);
     motorSetTarget(g_motor_retning, 0);
 
     // Wait until current PWM reaches 0 or timeout
@@ -148,7 +157,14 @@ void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t 
         // busy-wait; service ticks are incremented in ISR
     }
 
+    // Wait for 300ms (60 ticks) before changing direction
+    uint16_t delay_start = g_service_ticks;
+    while ((uint16_t)(g_service_ticks - delay_start) < 60) {
+        // busy-wait
+    }
+
     // Now set new direction and target PWM (will ramp up by service ISR)
+    motorSetRampSpeed(5);
     motorSetTarget(new_dir, targetPWM);
 }
 

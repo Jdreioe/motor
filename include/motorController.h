@@ -12,6 +12,9 @@ void motorInit(void);
 // Sæt mål: retning + PWM (0–1023)
 void motorSetTarget(MotorDirection retning, int targetPWM);
 
+// Set ramp speed (step size per tick). Default is 20.
+void motorSetRampSpeed(uint16_t step);
+
 // Hent nuværende PWM-værdi
 int motorGetCurrentPWM(void);
 

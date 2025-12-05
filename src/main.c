@@ -51,41 +51,39 @@ int main(void) {
         if (count != last_count) {
 
             last_count = count;
-        }
-
-        if (count == 1) {
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
-        }
-        else if (count == 2) {
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, UP_SPEED);
-        }
-        else if (count == 3) 
-        {
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, DOWN_SPEED);
-        }
-        else if (count == 4)
-        {
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
-        }
-        
-        else if (count == 6) {
-            motorChangeDirection(MOTOR_DIRECTION_REVERSE, NORM_SPEED);
-
-        }
-        else if (count == 7) {
-
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, STOP);
-            _delay_ms(2000);
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
-        }
-        else if (count >= 8 && count < 10) {
+        // prtøver uden }
+            if (count == 1) {
+                motorSetRampSpeed(20);
+                motorSetTarget(MOTOR_DIRECTION_DRIVE, UP_SPEED);
+            }
+            else if (count == 2) {
+                motorSetRampSpeed(20);
+                motorSetTarget(MOTOR_DIRECTION_DRIVE, UP_SPEED);
+            }
+            else if (count == 3) 
+            {
+                motorSetRampSpeed(25);
+                motorSetTarget(MOTOR_DIRECTION_DRIVE, DOWN_SPEED);
+            }
+            else if (count == 4)
+            {
+                motorSetRampSpeed(20);
+                motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
+            }
             
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
-        }
-        else if (count >= 10) {
+            else if (count == 6) {  
+                motorChangeDirection(MOTOR_DIRECTION_REVERSE, NORM_SPEED);
+                }
+            else if (count == 8) {
+                motorChangeDirection(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
+            }
 
-            motorSetTarget(MOTOR_DIRECTION_DRIVE, STOP);
-        }
+            else if (count == 11) {
+                motorSetRampSpeed(20);
+                _delay_ms(200);
+                motorSetTarget(MOTOR_DIRECTION_DRIVE, STOP);
+            }
+        } // iflg. chat skal det være her, den slutter
         
         _delay_ms(10);
     }

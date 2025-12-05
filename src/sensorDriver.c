@@ -61,7 +61,7 @@ void sensorUpdate(void) {
 
         case SENSOR_STATE_LED_ON: {
             // Wait for 2000ms (400 ticks)
-            if ((uint16_t)(current_ticks - state_start_ticks) >= 400) {
+            if ((uint16_t)(current_ticks - state_start_ticks) >= 100) {
                 turnOffLED(0);
                 
                 // Start timer for IGNORE duration (5ms = 1 tick @ 200Hz)
