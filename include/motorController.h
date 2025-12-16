@@ -17,6 +17,11 @@ void motorSetRampSpeed(uint16_t step);
 
 // Hent nuværende PWM-værdi
 int motorGetCurrentPWM(void);
+
+// Hent mål PWM-værdi
+int motorGetTargetPWM(void);
+
+// Default ramp time (ms) used for safe direction changes.
 // Slukker motoren ved timeout
 void motorBreak();
 

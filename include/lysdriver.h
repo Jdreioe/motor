@@ -13,12 +13,12 @@
 void baglys_init(void);
 
 // Headlight control (PB4)
-void turn_on_headlight(uint8_t pwm);
+void turn_on_headlight(void);
 void turn_off_headlight(void);
 
 // Rear light / brake control (PH6)
-void turn_on_rearlight(uint16_t pwm);
+void turn_on_rearlight(void);
 void turn_off_rearlight(void);
-void turn_on_brakelight(uint16_t pwm);
+void turn_on_brakelight(void);
 
 #endif // LYSDRIVER_H

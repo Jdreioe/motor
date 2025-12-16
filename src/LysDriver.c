@@ -30,9 +30,9 @@ void baglys_init(void)
     sei();
 }
 
-void turn_on_headlight(uint8_t pwm)
+void turn_on_headlight(void)
 {
-    head_pwm_duty = pwm; // 0..255
+    head_pwm_duty = 255; // 0..255
 }
 
 void turn_off_headlight(void)
@@ -41,10 +41,9 @@ void turn_off_headlight(void)
     PORTB &= ~(1 << PB4);
 }
 
-void turn_on_rearlight(uint16_t pwm)
+void turn_on_rearlight(void)
 {
-    if (pwm > 255) pwm = 255;
-    rear_pwm_duty = (uint8_t)pwm;
+    rear_pwm_duty=43.35;
 }
 
 void turn_off_rearlight(void)
@@ -53,10 +52,9 @@ void turn_off_rearlight(void)
     PORTH &= ~(1 << PH6);
 }
 
-void turn_on_brakelight(uint16_t pwm)
+void turn_on_brakelight(void)
 {
-    if (pwm > 255) pwm = 255;
-    rear_pwm_duty = (uint8_t)pwm;
+    rear_pwm_duty = 255;
 }
 
 // Timer3 Compare A interrupt - drive software PWM on PB4 and PH6

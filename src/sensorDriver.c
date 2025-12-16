@@ -29,6 +29,10 @@ void sensorInit(void) {
     // LED initialization is handled by initLEDport() in main
 }
 
+void resetReflexCount(void) {
+    reflex_count = 0;
+}
+
 void sensorUpdate(void) {
     uint16_t current_ticks = motorGetTicks();
 

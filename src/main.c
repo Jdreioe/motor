@@ -8,6 +8,7 @@
 #include "led.h"
 #include "sensorDriver.h"
 #include "uart.h"
+#include "somo.h"
 #include "lysdriver.h"
 #define PWM_PERCENT(pct) ((uint16_t)((pct) * 1023UL / 100UL))
 #define NORM_SPEED PWM_PERCENT(70)
@@ -16,35 +17,47 @@
 #define STOP 0
 
 
+void koerBanen(void);
+
 int main(void) {
     initSwitchPort();
     initLEDport();
     uartInit();
     baglys_init();    
     sensorInit();
-    
+    somoInit();
+    motorInit();
+
     printf("System Initialized\n");
 
-    // Ensure motor is stopped at start
+    while (1) {
+        // Wait for start signal (e.g., SW0)
+        while (!switchOn(0)) {
+            _delay_ms(10);
+        }
 
-    // Wait for start signal (e.g., SW0)
-    while (!switchOn(0)) {
-        _delay_ms(10);
+         koerBanen();
+        
+        // Debounce/wait before next run
+        _delay_ms(1000);
     }
-    printf("Starting...\n");
-    motorInit();
-    turn_on_headlight(230);
-    turn_on_rearlight(43.35);
-    _delay_ms(500); // Debounce/wait
+    
+    return 0;
+}
 
+void koerBanen(void) {
+    resetReflexCount();
     motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
     // Start driving forward
     motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
 
     uint16_t last_count = 0xFFFF;
-    uint32_t loop_counter = 0;
+    bool running = true;
+    bool braking = false;
+    uint16_t brake_start_tick = 0;
 
-    while (1) {
+    while (running) {
+        uint16_t current_ticks = motorGetTicks();
 
         sensorUpdate();
         uint16_t count = getReflexCount();
@@ -52,7 +65,8 @@ int main(void) {
         if (count != last_count) {
 
             last_count = count;
-        // prtøver uden }
+            play_refleks_sound();
+
             if (count == 1) {
                 motorSetRampSpeed(20);
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, UP_SPEED);
@@ -65,13 +79,11 @@ int main(void) {
             {
                 motorSetRampSpeed(25);
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, DOWN_SPEED);
-                turn_on_brakelight(255);
             }
             else if (count == 4)
             {
                 motorSetRampSpeed(20);
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
-                turn_on_headlight(230);
             }
             
             else if (count == 6) {  
@@ -83,18 +95,35 @@ int main(void) {
 
             else if (count == 11) {
                 motorSetRampSpeed(20);
+                play_finish_sound();
                 _delay_ms(200);
+ 
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, STOP);
-                
+                 
+                running = false;                
             }
         } // iflg. chat skal det være her, den slutter
         
-        _delay_ms(10);
+        // Lysstyring
+        int current_pwm = motorGetCurrentPWM();
+        int target_pwm = motorGetTargetPWM();
+
+        if (current_pwm > target_pwm) {
+            turn_on_brakelight();
+            turn_on_headlight();
+           uint16_t delay_start = motorGetTicks();
+    while ((uint16_t)(motorGetTicks() - delay_start) < 100) {
+        // busy-wait
     }
-    
-    return 0;
-}
+        // Hvis der er spænding på motoren
+        } else if (current_pwm > 0) {
+            turn_on_rearlight();
+            turn_on_headlight();
+            // Ellers sluk lys
+        } else {
+            turn_off_rearlight();
+            turn_off_headlight();
+        }
 
-int GetCurrentTemp(void) {
-
+    }
 }

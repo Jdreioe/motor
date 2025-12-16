@@ -88,6 +88,11 @@ int motorGetCurrentPWM(void) {
     return g_current_pwm;
 }
 
+// get target PWM value
+int motorGetTargetPWM(void) {
+    return g_target_pwm;
+}
+
 // Timer1: Set PWM + direction
 static void writePwm(uint16_t pwm, MotorDirection retning) {
     // Always update OCR1A so timer compare value stays in sync. If output
@@ -125,6 +130,7 @@ static inline void motorServiceTick(void) {
     // Write to hardware
     writePwm(pwm, g_motor_retning);
 
+
     // Increment service tick counter (200 Hz -> 5 ms per tick)
     g_service_ticks++;
 
@@ -150,7 +156,6 @@ static void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, ui
     // Request ramp down to 0 while keeping current direction
     motorSetRampSpeed(15);
     motorSetTarget(g_motor_retning, 0);
-    turn_on_brakelight(255);
 
     // Wait until current PWM reaches 0 or timeout
     while (g_current_pwm > 0) {
@@ -159,19 +164,15 @@ static void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, ui
         }
         // busy-wait; service ticks are incremented in ISR
     }
-    turn_off_headlight();
-    turn_off_rearlight();
 
-    // Wait for 300ms (60 ticks) before changing direction
+    // Wait for 1000ms (1000 ticks) before starting againb
     uint16_t delay_start = g_service_ticks;
-    while ((uint16_t)(g_service_ticks - delay_start) < 60) {
+    while ((uint16_t)(g_service_ticks - delay_start) < 200) {
         // busy-wait
     }
-    turn_on_headlight(230);
 
     // Now set new direction and target PWM (will ramp up by service ISR)
     motorSetRampSpeed(5);
-    turn_on_rearlight(43.35);
     motorSetTarget(new_dir, targetPWM);
 }
 
@@ -214,6 +215,14 @@ void motorDisableOutput(void) {
 }
 
 // Get current service ticks (200Hz counter)
+uint16_t motorGetTicks(void) {
+    uint16_t ticks;
+    uint8_t sreg = SREG;
+    cli();
+    ticks = g_service_ticks;
+    SREG = sreg;
+    return ticks;
+}
 uint16_t motorGetTicks(void) {
     uint16_t ticks;
     uint8_t sreg = SREG;
