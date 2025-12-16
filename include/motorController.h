@@ -17,20 +17,19 @@ void motorSetRampSpeed(uint16_t step);
 
 // Hent nuværende PWM-værdi
 int motorGetCurrentPWM(void);
-
-// Default ramp time (ms) used for safe direction changes.
-#define DIRECTION_RAMP_MS_DEFAULT 500
+// Slukker motoren ved timeout
+void motorBreak();
 
 // Change direction safely: ramp down, switch direction, ramp up.
 // `ramp_ms` is the maximum time allowed for ramping down (in ms).
-void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms);
+static void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms);
 
 // Convenience wrapper using default ramp time.
 void motorChangeDirection(MotorDirection new_dir, int targetPWM);
 
 // Enable/disable the PWM output pin. When disabled the OC1A output
 // is disconnected from the pin (COM1A bits cleared) to ensure the
-// pin is not driving the motor when no function is selected.
+// pin is not driving the motor when no function is selected. (for debugginh)
 void motorEnableOutput(void);
 void motorDisableOutput(void);
 

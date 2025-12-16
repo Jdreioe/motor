@@ -8,7 +8,7 @@
 #include "led.h"
 #include "sensorDriver.h"
 #include "uart.h"
-
+#include "lysdriver.h"
 #define PWM_PERCENT(pct) ((uint16_t)((pct) * 1023UL / 100UL))
 #define NORM_SPEED PWM_PERCENT(70)
 #define UP_SPEED PWM_PERCENT(100)
@@ -20,13 +20,12 @@ int main(void) {
     initSwitchPort();
     initLEDport();
     uartInit();
-    
+    baglys_init();    
     sensorInit();
     
     printf("System Initialized\n");
 
     // Ensure motor is stopped at start
-
 
     // Wait for start signal (e.g., SW0)
     while (!switchOn(0)) {
@@ -34,6 +33,8 @@ int main(void) {
     }
     printf("Starting...\n");
     motorInit();
+    turn_on_headlight(230);
+    turn_on_rearlight(43.35);
     _delay_ms(500); // Debounce/wait
 
     motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
@@ -64,11 +65,13 @@ int main(void) {
             {
                 motorSetRampSpeed(25);
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, DOWN_SPEED);
+                turn_on_brakelight(255);
             }
             else if (count == 4)
             {
                 motorSetRampSpeed(20);
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED);
+                turn_on_headlight(230);
             }
             
             else if (count == 6) {  
@@ -82,6 +85,7 @@ int main(void) {
                 motorSetRampSpeed(20);
                 _delay_ms(200);
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, STOP);
+                
             }
         } // iflg. chat skal det være her, den slutter
         

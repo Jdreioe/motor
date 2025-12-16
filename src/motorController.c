@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "motorController.h"
 #include <util/delay.h>
+#include "lysdriver.h"
+#define DIRECTION_RAMP_MS_DEFAULT 500
 #define PWM_PIN PB5  // Pin 11 → OCR1A
 #define DIR_PIN PB6  // Pin 12 → Direction
 #define PWM_RAMP_STEP_DEFAULT 20 // Default PWM change step per tick
@@ -135,12 +137,12 @@ static inline void motorServiceTick(void) {
     }
 }
 // Called from main to timeout the motor if needed
-static void motorBreak(void) {
+void motorBreak(void) {
         g_target_pwm = 0;
     
 }
 // Safely change direction: ramp down to 0 (within `ramp_ms`), switch direction, ramp up to `targetPWM`.
-void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms) {
+static void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms) {
     // Compute max number of service ticks to wait (each tick = 5 ms)
     uint16_t start = g_service_ticks;
     uint16_t max_ticks = (ramp_ms + 4) / 5; // ceil(ramp_ms/5)
@@ -148,6 +150,7 @@ void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t 
     // Request ramp down to 0 while keeping current direction
     motorSetRampSpeed(15);
     motorSetTarget(g_motor_retning, 0);
+    turn_on_brakelight(255);
 
     // Wait until current PWM reaches 0 or timeout
     while (g_current_pwm > 0) {
@@ -156,15 +159,19 @@ void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t 
         }
         // busy-wait; service ticks are incremented in ISR
     }
+    turn_off_headlight();
+    turn_off_rearlight();
 
     // Wait for 300ms (60 ticks) before changing direction
     uint16_t delay_start = g_service_ticks;
     while ((uint16_t)(g_service_ticks - delay_start) < 60) {
         // busy-wait
     }
+    turn_on_headlight(230);
 
     // Now set new direction and target PWM (will ramp up by service ISR)
     motorSetRampSpeed(5);
+    turn_on_rearlight(43.35);
     motorSetTarget(new_dir, targetPWM);
 }
 
