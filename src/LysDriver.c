@@ -32,7 +32,7 @@ void baglys_init(void)
 
 void turn_on_headlight(void)
 {
-    head_pwm_duty = 255; // 0..255
+    head_pwm_duty = 230; // 0..255
 }
 
 void turn_off_headlight(void)
