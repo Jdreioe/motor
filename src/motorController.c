@@ -23,6 +23,13 @@ static volatile uint16_t g_service_ticks = 0;
 // PWM output enabled state and saved COM1A bits
 static volatile bool g_pwm_output_enabled = true;
 static uint8_t g_saved_com1a_bits = 0;
+// Direction change state (non-blocking state machine)
+static volatile bool g_direction_change_active = false;
+static volatile MotorDirection g_direction_new = MOTOR_DIRECTION_DRIVE;
+static volatile int g_direction_new_target = 0;
+static volatile uint16_t g_direction_max_ticks = 0;
+static volatile uint16_t g_direction_start = 0;
+static volatile uint8_t g_direction_stage = 0; // 0=idle,1=ramp_down,2=delay_before_up
 
 // Limits PWM to 0-1023 range. If above, its set to 1023. If below, its set to 0. Otherwise, the value is returned unchanged.
 static inline uint16_t limitPWM(int pwm) {
@@ -134,6 +141,31 @@ static inline void motorServiceTick(void) {
     // Increment service tick counter (200 Hz -> 5 ms per tick)
     g_service_ticks++;
 
+    /* Handle an in-progress direction change without blocking main.
+       Stages:
+        1 = ramp down to 0 (wait until g_current_pwm==0 or timeout)
+        2 = delay before ramp up (fixed 200 ticks)
+        On completing stage 2 we set new direction/target and stop the state machine
+    */
+    if (g_direction_change_active) {
+        if (g_direction_stage == 1) {
+            // Check for ramp-down complete or timeout
+            if (g_current_pwm == 0 || (uint16_t)(g_service_ticks - g_direction_start) >= g_direction_max_ticks) {
+                // move to delay stage
+                g_direction_stage = 2;
+                g_direction_start = g_service_ticks;
+            }
+        } else if (g_direction_stage == 2) {
+            // wait 200 ticks (~1s) then apply new direction and target
+            if ((uint16_t)(g_service_ticks - g_direction_start) >= 200) {
+                motorSetRampSpeed(5);
+                motorSetTarget(g_direction_new, g_direction_new_target);
+                g_direction_change_active = false;
+                g_direction_stage = 0;
+            }
+        }
+    }
+
     // 1-minute timeout check (12000 ticks at 200 Hz= 60s)
     if (g_service_ticks >= 12000) {
         g_target_pwm = 0;
@@ -149,31 +181,24 @@ void motorBreak(void) {
 }
 // Safely change direction: ramp down to 0 (within `ramp_ms`), switch direction, ramp up to `targetPWM`.
 static void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms) {
-    // Compute max number of service ticks to wait (each tick = 5 ms)
-    uint16_t start = g_service_ticks;
+    // Start a non-blocking direction-change sequence handled from the service tick.
     uint16_t max_ticks = (ramp_ms + 4) / 5; // ceil(ramp_ms/5)
+
+    uint8_t sreg = SREG;
+    cli();
+    // configure state machine
+    g_direction_new = new_dir;
+    g_direction_new_target = targetPWM;
+    g_direction_max_ticks = max_ticks;
+    g_direction_start = g_service_ticks;
+    g_direction_stage = 1; // ramp_down
+    g_direction_change_active = true;
+    SREG = sreg;
 
     // Request ramp down to 0 while keeping current direction
     motorSetRampSpeed(15);
     motorSetTarget(g_motor_retning, 0);
-
-    // Wait until current PWM reaches 0 or timeout
-    while (g_current_pwm > 0) {
-        if ((uint16_t)(g_service_ticks - start) >= max_ticks) {
-            break; // timeout
-        }
-        // busy-wait; service ticks are incremented in ISR
-    }
-
-    // Wait for 1000ms (1000 ticks) before starting againb
-    uint16_t delay_start = g_service_ticks;
-    while ((uint16_t)(g_service_ticks - delay_start) < 200) {
-        // busy-wait
-    }
-
-    // Now set new direction and target PWM (will ramp up by service ISR)
-    motorSetRampSpeed(5);
-    motorSetTarget(new_dir, targetPWM);
+    // return immediately; progress is handled from ISR
 }
 
 // Convenience wrapper using default macro from header
@@ -223,11 +248,4 @@ uint16_t motorGetTicks(void) {
     SREG = sreg;
     return ticks;
 }
-uint16_t motorGetTicks(void) {
-    uint16_t ticks;
-    uint8_t sreg = SREG;
-    cli();
-    ticks = g_service_ticks;
-    SREG = sreg;
-    return ticks;
-}
+

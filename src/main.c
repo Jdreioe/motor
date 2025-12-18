@@ -15,6 +15,8 @@
 #define UP_SPEED PWM_PERCENT(100)
 #define DOWN_SPEED PWM_PERCENT(40)
 #define STOP 0
+// Number of service ticks to keep brake light on after a braking event
+#define BRAKE_HOLD_TICKS 100
 
 
 void koerBanen(void);
@@ -25,7 +27,7 @@ int main(void) {
     uartInit();
     baglys_init();    
     sensorInit();
-    somoInit();
+    somo_init();
     motorInit();
 
     printf("System Initialized\n");
@@ -55,6 +57,8 @@ void koerBanen(void) {
     bool running = true;
     bool braking = false;
     uint16_t brake_start_tick = 0;
+    uint16_t last_light_toggle = 0;
+    uint16_t brake_latch_until = 0;
 
     while (running) {
         uint16_t current_ticks = motorGetTicks();
@@ -99,31 +103,43 @@ void koerBanen(void) {
                 _delay_ms(200);
  
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, STOP);
-                 
-                running = false;                
             }
-        } // iflg. chat skal det være her, den slutter
+        }
         
+        // iflg. chat skal det være her, den slutter
         // Lysstyring
+
         int current_pwm = motorGetCurrentPWM();
         int target_pwm = motorGetTargetPWM();
+        
+        // If braking now, extend the brake-latch timer
+            if (current_pwm > target_pwm) {
+                brake_latch_until = (uint16_t)(motorGetTicks() + BRAKE_HOLD_TICKS);
+            }
 
-        if (current_pwm > target_pwm) {
-            turn_on_brakelight();
-            turn_on_headlight();
-           uint16_t delay_start = motorGetTicks();
-    while ((uint16_t)(motorGetTicks() - delay_start) < 100) {
-        // busy-wait
-    }
-        // Hvis der er spænding på motoren
-        } else if (current_pwm > 0) {
-            turn_on_rearlight();
-            turn_on_headlight();
-            // Ellers sluk lys
-        } else {
-            turn_off_rearlight();
-            turn_off_headlight();
+        // Update lights immediately if count < 1, otherwise throttle to every 10 ticks
+        if (count < 1 || (uint16_t)(motorGetTicks() - last_light_toggle) >= 10) {
+            last_light_toggle = motorGetTicks();
+
+            // Brake should be on if currently braking or latch hasn't expired
+            bool brake_on = ((int16_t)(brake_latch_until - motorGetTicks()) > 0) || (current_pwm > target_pwm);
+
+            if (brake_on || current_pwm > target_pwm) {
+                turn_on_brakelight();
+                turn_on_headlight();
+            } else if (current_pwm > 0) {
+                turn_on_rearlight();
+                turn_on_headlight();
+            } else {
+            }
+            // End running as the last thing
+            if (current_pwm == 0 && count >= 11 && brake_on == 0) {
+                turn_off_rearlight();
+                turn_off_headlight();
+                running = false;
+            }
         }
 
+        
     }
 }

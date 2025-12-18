@@ -39,6 +39,8 @@ void motorEnableOutput(void);
 void motorDisableOutput(void);
 
 // Get current service ticks (200Hz counter)
+#include <stdbool.h>
+
 uint16_t motorGetTicks(void);
 
 #endif
