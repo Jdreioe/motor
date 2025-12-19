@@ -22,7 +22,7 @@ void somo_init(void) {
     UCSR3B = (1 << TXEN3);                  // Enable Transmitter
     UCSR3C = (1 << UCSZ31) | (1 << UCSZ30); // 8 data bits, 1 stop bit, no parity
 
-    somo_set_volume(25);
+    somo_set_volume(30);
 }
 
 void somo_play_track(uint8_t trackNum) {
@@ -38,11 +38,11 @@ void somo_stop(void) {
     somo_send_packet(0x16, 0x00, 0x00);
 }
 void play_start_sound(void) {
-    somo_play_track(0x00);
-}
-void play_refleks_sound(void) {
     somo_play_track(0x01);
 }
-void play_finish_sound(void) {
+void play_refleks_sound(void) {
     somo_play_track(0x02);
+}
+void play_finish_sound(void) {
+    somo_play_track(0x03);
 }

@@ -49,6 +49,8 @@ int main(void) {
 
 void koerBanen(void) {
     resetReflexCount();
+    play_start_sound();
+    _delay_ms(100);
     motorSetTarget(MOTOR_DIRECTION_DRIVE, 0);
     // Start driving forward
     motorSetTarget(MOTOR_DIRECTION_DRIVE, NORM_SPEED); 
@@ -61,12 +63,15 @@ void koerBanen(void) {
     uint16_t brake_latch_until = 0;
 
     while (running) {
+
+
         uint16_t current_ticks = motorGetTicks();
 
         sensorUpdate();
         uint16_t count = getReflexCount();
+        bool hasPlayed = false;
 
-        if (count != last_count) {
+        if (count != last_count && count != 0) {
 
             last_count = count;
             play_refleks_sound();
@@ -99,12 +104,11 @@ void koerBanen(void) {
 
             else if (count == 11) {
                 motorSetRampSpeed(20);
-                play_finish_sound();
                 _delay_ms(200);
                 
  
                 motorSetTarget(MOTOR_DIRECTION_DRIVE, STOP);
-                
+                play_finish_sound();
             }
         }
         
