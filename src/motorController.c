@@ -134,7 +134,7 @@ static inline void motorServiceTick(void) {
     uint16_t pwm = limitPWM(current);
     // Update global current PWM
     g_current_pwm = pwm;
-    // Write to hardware
+    // Write to hardwarek
     writePwm(pwm, g_motor_retning);
 
 
@@ -156,9 +156,9 @@ static inline void motorServiceTick(void) {
                 g_direction_start = g_service_ticks;
             }
         } else if (g_direction_stage == 2) {
-            // wait 200 ticks (~1s) then apply new direction and target
-            if ((uint16_t)(g_service_ticks - g_direction_start) >= 200) {
-                motorSetRampSpeed(5);
+            // wait 1+0 ticks (~200ms) then apply new direction and target
+            if ((uint16_t)(g_service_ticks - g_direction_start) >= 10) {
+                motorSetRampSpeed(PWM_RAMP_STEP_DEFAULT);
                 motorSetTarget(g_direction_new, g_direction_new_target);
                 g_direction_change_active = false;
                 g_direction_stage = 0;
