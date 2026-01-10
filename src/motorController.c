@@ -123,11 +123,11 @@ static inline void motorServiceTick(void) {
         }
     }
 
-    // 3. Safety Timeout (60 Seconds)
+    // Timeout (60 Seconds)
     if (g_service_ticks >= TIMEOUT_TICKS) {
         g_target_pwm = 0;
         g_current_pwm = 0;
-        writePwm(0, g_motor_retning);
+        motorBreak()
     }
 }
 
@@ -156,8 +156,13 @@ void motorInit(void) {
 }
 
 void motorSetTarget(MotorDirection retning, int targetPWM) {
-    g_motor_retning = retning;
-    g_target_pwm = limitPWM(targetPWM);
+    if(retning != g_motor_retning){
+        motorChangeDirection(retning, targetPWM)
+    }
+    else{    
+        g_target_pwm = limitPWM(targetPWM);
+    }
+
 }
 
 void motorSetRampSpeed(uint16_t step) {
@@ -198,7 +203,7 @@ void motorChangeDirection(MotorDirection new_dir, int targetPWM) {
 void motorBreak(void) {
     g_target_pwm = 0;
 }
-
+// til debugging / modultest
 void motorEnableOutput(void) {
     uint8_t sreg = SREG;
     cli();
@@ -209,7 +214,7 @@ void motorEnableOutput(void) {
     g_pwm_enabled = true;
     SREG = sreg;
 }
-
+// til debugging / modultest
 void motorDisableOutput(void) {
     uint8_t sreg = SREG;
     cli();
