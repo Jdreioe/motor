@@ -71,7 +71,7 @@ ISR(TIMER5_COMPA_vect) {
 // --- Core Logic ---
 
 static inline void motorServiceTick(void) {
-    // 1. Handle Ramping
+    // Handle Ramping
     int current = g_current_pwm;
     int target = g_target_pwm;
     //  Current * 2 + g_ramp_step
@@ -94,7 +94,7 @@ static inline void motorServiceTick(void) {
 
     g_service_ticks++;
 
-    // 2. Handle Safe Direction Change State Machine
+    // Handle Safe Direction Change State Machine
     if (g_dirState.active) {
         uint16_t elapsed = g_service_ticks - g_dirState.startTick;
 
@@ -132,7 +132,9 @@ static inline void motorServiceTick(void) {
 }
 
 // --- Public Functions ---
-
+void resetTicks() {
+    g_service_ticks = 0
+}
 void motorInit(void) {
     // Pin Config: PWM and DIR as Outputs
     DDRB |= (1 << PWM_PIN) | (1 << DIR_PIN);
