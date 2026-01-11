@@ -14,7 +14,7 @@ static void somo_send_packet(uint8_t cmd, uint8_t param1, uint8_t param2) {
 
 // Initialize UART3 for SOMO module (9600 baud)
 void somo_init(void) {
-    uart_init())
+    uartInit())
     // 9600 baud @ 16MHz: UBRR = (16000000 / (16 * 9600)) - 1 = 103
     
     unsigned int ubrr = 103;
