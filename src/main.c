@@ -24,8 +24,7 @@ void koerBanen(void);
 int main(void) {
     initSwitchPort();
     initLEDport();
-    uartInit();
-    baglys_init();    
+    lys_init();    
     sensorInit();
     somo_init();
     motorInit();
@@ -48,6 +47,7 @@ int main(void) {
 }
 
 void koerBanen(void) {
+    resetTicks()
     resetReflexCount();
     play_start_sound();
     _delay_ms(100);
