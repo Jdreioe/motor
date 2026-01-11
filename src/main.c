@@ -131,8 +131,8 @@ void koerBanen(void) {
         was_braking = currently_braking;
         was_moving = (current_pwm > 0);
 
-        // Update lights immediately if count < 1, otherwise throttle to every 100 ticks
-        if (count < 1 || (uint16_t)(motorGetTicks() - last_light_toggle) >= 100) {
+        // Update lights immediately if count < 1, otherwise throttle to every 10 ticks
+        if (count < 1 || (uint16_t)(motorGetTicks() - last_light_toggle) >= 10) {
             last_light_toggle = motorGetTicks();
 
             // Brake should be on if currently braking or latch hasn't expired
