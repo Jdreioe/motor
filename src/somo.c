@@ -1,6 +1,6 @@
 #include "somo.h"
 #include <avr/io.h>
-
+#include "uart.h"
 // Hjælpefunktion der sender package
 static void somo_send_packet(uint8_t cmd, uint8_t param1, uint8_t param2) {
     uint16_t checksum = 0xFFFF - (cmd + param1 + param2) + 1; 
@@ -14,7 +14,9 @@ static void somo_send_packet(uint8_t cmd, uint8_t param1, uint8_t param2) {
 
 // Initialize UART3 for SOMO module (9600 baud)
 void somo_init(void) {
+    uart_init())
     // 9600 baud @ 16MHz: UBRR = (16000000 / (16 * 9600)) - 1 = 103
+    
     unsigned int ubrr = 103;
     UBRR3H = (unsigned char)(ubrr >> 8);
     UBRR3L = (unsigned char)ubrr;
