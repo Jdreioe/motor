@@ -16,6 +16,8 @@ void motorInit(void);
 // Denne skal kaldes af din Timer5 ISR (f.eks. ved 200Hz eller 100Hz)
 // Håndterer acceleration, deceleration og retningsskift.
 void motorServiceTick(void);
+// Reset serviceTicks
+void resetTicks(void);
 
 // Sæt mål: retning + PWM (0–1023)
 void motorSetTarget(MotorDirection retning, int targetPWM);
