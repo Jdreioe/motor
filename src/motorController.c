@@ -132,7 +132,7 @@ static inline void motorServiceTick(void) {
 }
 
 // --- Public Functions ---
-void resetTicks() {
+void resetTicks(void) {
     g_service_ticks = 0
 }
 void motorInit(void) {
