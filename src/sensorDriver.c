@@ -10,15 +10,9 @@ static uint8_t last_left = 0;
 static uint8_t last_right = 0;
 static uint16_t reflex_count = 0;
 
-// State machine for non-blocking delay
-typedef enum {
-    SENSOR_STATE_IDLE,
-    SENSOR_STATE_LED_ON,
-    SENSOR_STATE_IGNORE
-} SensorState;
-
-static SensorState current_state = SENSOR_STATE_IDLE;
-static uint16_t state_start_ticks = 0;
+// Timing variables for non-blocking delay
+static uint8_t led_active = 0;
+static uint16_t led_start_ticks = 0;
 
 void sensorInit(void) {
     // PD2 og PD3 som input (sensorer)
@@ -36,57 +30,40 @@ void resetReflexCount(void) {
 void sensorUpdate(void) {
     uint16_t current_ticks = motorGetTicks();
 
-    switch (current_state) {
-        case SENSOR_STATE_IDLE: {
-            // Læs sensorer
-            uint8_t left = (PIND & (1 << PD2)) ? 1 : 0;
-            uint8_t right = (PIND & (1 << PD3)) ? 1 : 0;
-
-            // Tjek om der er en "ny" refleks:
-            if ( (left == 1 && last_left == 0) ||
-                 (right == 1 && last_right == 0) )
-            {
-                // Vi har passeret én refleks
-                reflex_count++;
-
-                // Tænd LED
-                turnOnLED(0);
-                
-                // Start timer for LED ON duration (2000ms = 400 ticks @ 200Hz)
-                state_start_ticks = current_ticks;
-                current_state = SENSOR_STATE_LED_ON;
-            }
-            
-            // Gem nuværende tilstand til næste loop
-            last_left = left;
-            last_right = right;
-            break;
+    // Handle LED timing if active
+    if (led_active) {
+        uint16_t elapsed = (uint16_t)(current_ticks - led_start_ticks);
+        
+        // Turn off LED after 500ms (100 ticks @ 200Hz)
+        if (elapsed >= 100) {
+            turnOffLED(0);
         }
-
-        case SENSOR_STATE_LED_ON: {
-            // Wait for 2000ms (400 ticks)
-            if ((uint16_t)(current_ticks - state_start_ticks) >= 100) {
-                turnOffLED(0);
-                
-                // Start timer for IGNORE duration (5ms = 1 tick @ 200Hz)
-                state_start_ticks = current_ticks;
-                current_state = SENSOR_STATE_IGNORE;
-            }
-            break;
+        
+        // After ignore period (500ms + 5ms = 101 ticks), reset to allow new detections
+        if (elapsed >= 101) {
+            led_active = 0;
+            // Update last sensor state to current state
+            last_left = (PIND & (1 << PD2)) ? 1 : 0;
+            last_right = (PIND & (1 << PD3)) ? 1 : 0;
         }
-
-        case SENSOR_STATE_IGNORE: {
-            // Wait for 5ms (1 tick)
-            if ((uint16_t)(current_ticks - state_start_ticks) >= 1) {
-                // Read sensors to update last state before going back to IDLE
-                last_left = (PIND & (1 << PD2)) ? 1 : 0;
-                last_right = (PIND & (1 << PD3)) ? 1 : 0;
-                
-                current_state = SENSOR_STATE_IDLE;
-            }
-            break;
-        }
+        return; // Don't check for new reflexes while LED is active or ignoring
     }
+
+    // Read sensors
+    uint8_t left = (PIND & (1 << PD2)) ? 1 : 0;
+    uint8_t right = (PIND & (1 << PD3)) ? 1 : 0;
+
+    // Check for new reflex (edge detection)
+    if ((left == 1 && last_left == 0) || (right == 1 && last_right == 0)) {
+        reflex_count++;
+        turnOnLED(0);
+        led_start_ticks = current_ticks;
+        led_active = 1;
+    }
+    
+    // Save current sensor state
+    last_left = left;
+    last_right = right;
 }
 
 uint16_t getReflexCount(void) {
