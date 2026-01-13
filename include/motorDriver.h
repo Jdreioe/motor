@@ -43,16 +43,14 @@ uint16_t motorGetTicks(void);
 // Bruges f.eks. ved timeout eller nødstop.
 void motorBreak(void);
 
-// Change direction safely: ramp down, switch direction, ramp up.
-// `ramp_ms` is the maximum time allowed for ramping down (in ms).
-void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms);
+// void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms);
 
-// Convenience wrapper using default ramp time.
+// wrapper using default ramp time.
 void motorChangeDirection(MotorDirection new_dir, int targetPWM);
 
 // --- Hardware Control ---
 
-void motorEnableOutput(void);
-void motorDisableOutput(void);
+// void motorEnableOutput(void);
+// void motorDisableOutput(void);
 
 #endif
