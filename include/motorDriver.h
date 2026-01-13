@@ -4,29 +4,23 @@
 typedef enum {
     MOTOR_DIRECTION_DRIVE,
     MOTOR_DIRECTION_REVERSE
-} MotorDirection;
-
-// --- Initialization ---
+} MotorDirection; 
 
 // Initialiser Motor (Timer1 PWM + Control Loop)
 void motorInit(void);
 
-// --- Core Control ---
+// Core Control
 
-// Denne skal kaldes af din Timer5 ISR (f.eks. ved 200Hz eller 100Hz)
-// Håndterer acceleration, deceleration og retningsskift.
-void motorServiceTick(void);
-// Reset serviceTicks
+// Reset serviceTicks to 0
 void resetTicks(void);
 
 // Sæt mål: retning + PWM (0–1023)
 void motorSetTarget(MotorDirection retning, int targetPWM);
 
-// Set ramp speed (step size per tick). Default is 20.
-// Bruges nu både til acceleration og deceleration.
+// Set ramp speed
 void motorSetRampSpeed(uint16_t step);
 
-// --- Getters ---
+// Getters
 
 // Hent nuværende PWM-værdi (den øjeblikkelige værdi under ramping)
 int motorGetCurrentPWM(void);
@@ -37,13 +31,9 @@ int motorGetTargetPWM(void);
 // Get current service ticks (counter)
 uint16_t motorGetTicks(void);
 
-// --- Safety & Utilities ---
 
-// Stopper motoren (Brake) / Nulstiller state.
-// Bruges f.eks. ved timeout eller nødstop.
+// Timeout.
 void motorBreak(void);
-
-// void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms);
 
 // wrapper using default ramp time.
 void motorChangeDirection(MotorDirection new_dir, int targetPWM);
