@@ -3,13 +3,13 @@
 #include <util/delay.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "motorController.h"
+#include "motorDriver.h"
 #include "switch.h"
 #include "led.h"
 #include "sensorDriver.h"
 #include "uart.h"
 #include "somo.h"
-#include "lysdriver.h"
+#include "lysDriver.h"
 #define PWM_PERCENT(pct) ((uint16_t)((pct) * 1023UL / 100UL))
 #define NORM_SPEED PWM_PERCENT(70)
 #define UP_SPEED PWM_PERCENT(100)
@@ -24,7 +24,7 @@ void koerBanen(void);
 int main(void) {
     initSwitchPort();
     initLEDport();
-    lys_init();    
+    lysInit();    
     sensorInit();
     somo_init();
     motorInit();
