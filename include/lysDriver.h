@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 // Initialize I/O and timers used by the driver.
-void baglys_init(void);
+void lysInit(void);
 
 // Headlight control (PB4)
 void turn_on_headlight(void);
