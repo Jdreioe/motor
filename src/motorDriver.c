@@ -77,8 +77,7 @@ static inline void motorServiceTick(void) {
     //  Current * 2 + g_ramp_step
     change = (current * 2) + g_ramp_step;
     if (current != target) {
-        int change = 0;
-        
+       
         if (current < target) {
             current += change;
             if (current > target) current = target;
