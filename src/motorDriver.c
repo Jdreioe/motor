@@ -107,8 +107,8 @@ static inline void motorServiceTick(void) {
                 break;
 
             case DIR_STATE_WAIT:
-                // Wait approx 50ms (10 ticks) before reversing
-                if (elapsed >= 10) {
+                // Wait approx 500ms (100 ticks) before reversing
+                if (elapsed >= 100) {
                     motorSetRampSpeed(PWM_RAMP_DEFAULT);
                     motorSetTarget(g_dirState.nextDir, g_dirState.nextTargetPWM);
                     
