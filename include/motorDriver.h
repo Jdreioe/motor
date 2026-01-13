@@ -14,18 +14,18 @@ void motorInit(void);
 // Reset serviceTicks to 0
 void resetTicks(void);
 
-// Sæt mål: retning + PWM (0–1023)
-void motorSetTarget(MotorDirection retning, int targetPWM);
+// Set target PWM and direction
+void motorSetTarget(MotorDirection direction, int targetPWM);
 
 // Set ramp speed
 void motorSetRampSpeed(uint16_t step);
 
 // Getters
 
-// Hent nuværende PWM-værdi (den øjeblikkelige værdi under ramping)
+// Get current PWM
 int motorGetCurrentPWM(void);
 
-// Hent mål PWM-værdi
+// get PWM target
 int motorGetTargetPWM(void);
 
 // Get current service ticks (counter)
@@ -35,7 +35,7 @@ uint16_t motorGetTicks(void);
 // Timeout.
 void motorBreak(void);
 
-// wrapper using default ramp time.
+// Change direction.
 void motorChangeDirection(MotorDirection new_dir, int targetPWM);
 
 // --- Hardware Control ---
