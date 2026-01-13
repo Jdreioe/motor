@@ -33,7 +33,7 @@ typedef struct {
     int nextTargetPWM;
 } DirChangeState;
 
-// --- Global Variables ---
+// Global Variables
 static volatile int g_current_pwm = 0;
 static volatile int g_target_pwm = 0;
 static volatile uint16_t g_ramp_step = PWM_RAMP_DEFAULT;
@@ -45,7 +45,7 @@ static volatile DirChangeState g_dirState = {0}; // Initialize to 0/False
 static volatile bool g_pwm_enabled = true;
 static uint8_t g_saved_com1a = 0;
 
-// --- Helper Functions ---
+// Private functions
 
 static inline uint16_t limitPWM(int pwm) {
     if (pwm < 0) return 0;
@@ -63,15 +63,14 @@ static void writePwm(uint16_t pwm, MotorDirection retning) {
     }
 }
 
-// --- Interrupt Service Routine ---
+// Interrupt Service Routine 
 ISR(TIMER5_COMPA_vect) {
     motorServiceTick();
 }
 
-// --- Core Logic ---
-
+// The function that the interrupt runs (happens every 5 ms)
 static inline void motorServiceTick(void) {
-    // Handle Ramping
+
     int current = g_current_pwm;
     int target = g_target_pwm;
     //  Current * 2 + g_ramp_step
@@ -92,7 +91,7 @@ static inline void motorServiceTick(void) {
     }
 
     g_service_ticks++;
-
+    // This part of the function is generated with AI: prompt - Generate a ChangeDirection function which implements a state machine. It should wait 500 ms (100 ticks) before changing direction.
     // Handle Safe Direction Change State Machine
     if (g_dirState.active) {
         uint16_t elapsed = g_service_ticks - g_dirState.startTick;
@@ -130,12 +129,33 @@ static inline void motorServiceTick(void) {
     }
 }
 
-// --- Public Functions ---
+// Public Functions
+// this function  is generated with AI: prompt - Generate a ChangeDirection function which implements a state machine. It should wait 500 ms (100 ticks) before changing direction.
+static void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms) {
+    uint8_t sreg = SREG;
+    cli();
+    
+    // Setup state machine
+    g_dirState.active = true;
+    g_dirState.stage = DIR_STATE_RAMP_DOWN;
+    g_dirState.nextDir = new_dir;
+    g_dirState.nextTargetPWM = targetPWM;
+    g_dirState.durationTicks = (ramp_ms + 4) / 5; // Convert ms to ticks
+    g_dirState.startTick = g_service_ticks;
+    
+    SREG = sreg;
+
+    // Trigger ramp down
+    motorSetRampSpeed(15);
+    motorSetTarget(g_motor_retning, 0);
+}
+
+
 void resetTicks(void) {
     g_service_ticks = 0
 }
 void motorInit(void) {
-    // Pin Config: PWM and DIR as Outputs
+    // Pin Config
     DDRB |= (1 << PWM_PIN) | (1 << DIR_PIN);
     PORTB &= ~(1 << DIR_PIN);
 
@@ -178,34 +198,16 @@ int motorGetTargetPWM(void) {
     return g_target_pwm;
 }
 
-void motorChangeDirectionSafely(MotorDirection new_dir, int targetPWM, uint16_t ramp_ms) {
-    uint8_t sreg = SREG;
-    cli();
-    
-    // Setup state machine
-    g_dirState.active = true;
-    g_dirState.stage = DIR_STATE_RAMP_DOWN;
-    g_dirState.nextDir = new_dir;
-    g_dirState.nextTargetPWM = targetPWM;
-    g_dirState.durationTicks = (ramp_ms + 4) / 5; // Convert ms to ticks
-    g_dirState.startTick = g_service_ticks;
-    
-    SREG = sreg;
-
-    // Trigger ramp down
-    motorSetRampSpeed(15);
-    motorSetTarget(g_motor_retning, 0);
-}
-
 void motorChangeDirection(MotorDirection new_dir, int targetPWM) {
+
     motorChangeDirectionSafely(new_dir, targetPWM, DIR_RAMP_MS_DEF);
 }
-
+// Timeout
 void motorBreak(void) {
     g_target_pwm = 0;
 }
-// til debugging / modultest
-void motorEnableOutput(void) {
+// til debugging blev disse funktioner brugt
+/* void motorEnableOutput(void) {
     uint8_t sreg = SREG;
     cli();
     // Restore bits to re-connect Timer to Pin
@@ -215,7 +217,6 @@ void motorEnableOutput(void) {
     g_pwm_enabled = true;
     SREG = sreg;
 }
-// til debugging / modultest
 void motorDisableOutput(void) {
     uint8_t sreg = SREG;
     cli();
@@ -231,7 +232,7 @@ void motorDisableOutput(void) {
     g_pwm_enabled = false;
     SREG = sreg;
 }
-
+*/
 uint16_t motorGetTicks(void) {
     uint16_t ticks;
     uint8_t sreg = SREG;
