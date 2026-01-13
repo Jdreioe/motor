@@ -1,5 +1,5 @@
-#ifndef MOTORCONTROLLER_H
-#define MOTORCONTROLLER_H
+#ifndef MOTORDRIVER_H
+#define MOTORDRIVER_H
 
 typedef enum {
     MOTOR_DIRECTION_DRIVE,
@@ -52,8 +52,6 @@ void motorChangeDirection(MotorDirection new_dir, int targetPWM);
 
 // --- Hardware Control ---
 
-// Enable/disable the PWM output pin. When disabled the OC1A output
-// is disconnected from the pin to ensure safety.
 void motorEnableOutput(void);
 void motorDisableOutput(void);
 
