@@ -8,7 +8,7 @@ static volatile uint8_t head_pwm_duty = 0; // PB4
 static volatile uint8_t rear_pwm_duty = 0; // PH6
 
 // Initialize pins and Timer3 for software PWM
-void baglys_init(void)
+void lysInit(void)
 {
     // Configure output pins
     DDRB |= (1 << PB4); // headlight pin (PB4)
