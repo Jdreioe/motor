@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <util/delay.h>
-#include "motorController.h"
+#include "motorDriver.h"
 #include "lysdriver.h"
 
 // --- Configuration ---
